@@ -20,6 +20,13 @@ public class GT4500 implements SpaceShip {
     return false;
   }
 
+  private TorpedoStore getOtherTorpedoStore(TorpedoStore store) {
+    if (store == primaryTorpedoStore) return secondaryTorpedoStore;
+    else if (store == secondaryTorpedoStore) return primaryTorpedoStore;
+  
+    throw new IllegalArgumentException("torpedo store not found");
+  }
+
   /**
   * Tries to fire the torpedo stores of the ship.
   *
@@ -40,39 +47,21 @@ public class GT4500 implements SpaceShip {
 
     switch (firingMode) {
       case SINGLE:
+        TorpedoStore store = primaryTorpedoStore;
         if (wasPrimaryFiredLast) {
-          // try to fire the secondary first
-          if (! secondaryTorpedoStore.isEmpty()) {
-            firingSuccess = secondaryTorpedoStore.fire(1);
-            wasPrimaryFiredLast = false;
-          }
-          else {
-            // although primary was fired last time, but the secondary is empty
-            // thus try to fire primary again
-            if (! primaryTorpedoStore.isEmpty()) {
-              firingSuccess = primaryTorpedoStore.fire(1);
-              wasPrimaryFiredLast = true;
-            }
-
-            // if both of the stores are empty, nothing can be done, return failure
-          }
+          store = secondaryTorpedoStore;
         }
-        else {
-          // try to fire the primary first
-          if (! primaryTorpedoStore.isEmpty()) {
-            firingSuccess = primaryTorpedoStore.fire(1);
+        try {
+          firingSuccess = store.fire(1);
+          wasPrimaryFiredLast = false;
+        } catch(IllegalArgumentException e) {
+          // although primary was fired last time, but the secondary is empty
+          // thus try to fire primary again
+          try {
+            store = getOtherTorpedoStore(store);
+            firingSuccess = store.fire(1);
             wasPrimaryFiredLast = true;
-          }
-          else {
-            // although secondary was fired last time, but primary is empty
-            // thus try to fire secondary again
-            if (! secondaryTorpedoStore.isEmpty()) {
-              firingSuccess = secondaryTorpedoStore.fire(1);
-              wasPrimaryFiredLast = false;
-            }
-
-            // if both of the stores are empty, nothing can be done, return failure
-          }
+          } catch (IllegalArgumentException ignored) { /* */ }
         }
         break;
 
