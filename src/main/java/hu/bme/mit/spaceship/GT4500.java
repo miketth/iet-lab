@@ -31,6 +31,10 @@ public class GT4500 implements SpaceShip {
     throw new IllegalArgumentException("torpedo store not found");
   }
 
+  private void fired(TorpedoStore store) {
+    wasPrimaryFiredLast = store == primaryTorpedoStore;
+  }
+
   /**
   * Tries to fire the torpedo stores of the ship.
   *
@@ -57,14 +61,14 @@ public class GT4500 implements SpaceShip {
         }
         try {
           firingSuccess = store.fire(1);
-          wasPrimaryFiredLast = false;
+          fired(store);
         } catch(IllegalArgumentException e) {
           // although primary was fired last time, but the secondary is empty
           // thus try to fire primary again
           try {
             store = getOtherTorpedoStore(store);
             firingSuccess = store.fire(1);
-            wasPrimaryFiredLast = true;
+            fired(store);
           } catch (IllegalArgumentException ignored) { /* */ }
         }
         break;
